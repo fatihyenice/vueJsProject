@@ -1,47 +1,51 @@
-<script setup>
-import HelloWorld from './components/HelloWorld.vue'
-import TheWelcome from './components/TheWelcome.vue'
-</script>
-
 <template>
-  <header>
-    <img alt="Vue logo" class="logo" src="./assets/logo.svg" width="125" height="125" />
+  <div class="container">
 
-    <div class="wrapper">
-      <HelloWorld msg="You did it!" />
+    <div v-if="step === 'loading'">
+      Chargement...
     </div>
-  </header>
 
-  <main>
-    <TheWelcome />
-  </main>
+    <div v-else-if="step === 'error'">
+      Impossible d'importer le fichier
+    </div>
+
+    <div v-else-if="step === 'ok'">
+      <quizz :quizz="quiz" />
+    </div>
+  </div>
 </template>
 
-<style scoped>
-header {
-  line-height: 1.5;
-}
 
-.logo {
-  display: block;
-  margin: 0 auto 2rem;
-}
+<script setup>
+import { onMounted, ref } from 'vue';
+import quizz from './components/quizz.vue';
 
-@media (min-width: 1024px) {
-  header {
-    display: flex;
-    place-items: center;
-    padding-right: calc(var(--section-gap) / 2);
-  }
+const quiz = ref('');
+const step = ref('loading');
 
-  .logo {
-    margin: 0 2rem 0 0;
-  }
+onMounted(() => {
 
-  header .wrapper {
-    display: flex;
-    place-items: flex-start;
-    flex-wrap: wrap;
-  }
-}
-</style>
+  fetch('/quizz.json')
+  .then(r => {
+
+      if(r.ok){
+        step.value = "Fichier bien importé !";
+        return r.json();
+      }
+
+      throw new Error("Fichier non importé, erreur !")
+  })
+
+  .then(data => {
+
+    quiz.value = data
+    step.value = "ok"
+
+  })
+
+  .catch((e) => {
+    step.value = "error"
+  })
+
+});
+</script>
